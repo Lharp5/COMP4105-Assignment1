@@ -8,7 +8,7 @@ public class PiecesScript : MonoBehaviour {
     private GameObject square;
     private bool selected;
     public GameObject startingSquare;
-    private bool isKing;
+    public bool isKing;
 
     // Use this for initialization
     void Start () {
@@ -16,39 +16,31 @@ public class PiecesScript : MonoBehaviour {
         r = gameObject.GetComponent<Renderer>();
         startcolor = r.material.color;
         square = startingSquare;
+        square.GetComponent<SquareScript>().setPiece(gameObject);
         isKing = false;
     }
 
-    public bool MoveTo(GameObject sq)
+    void onDisable()
     {
-        int distance = square.GetComponent<SquareScript>().rank - sq.GetComponent<SquareScript>().rank;
-        if (!isKing)
+        square = null;
+    }
+
+    public void MoveTo(GameObject sq)
+    {
+        // Removing ourselves from the current Square
+        square.GetComponent<SquareScript>().setPiece(null);
+
+        //Adding the square as our new piece
+        square = sq;
+
+        //adding ourselves to the square
+        square.GetComponent<SquareScript>().setPiece(gameObject);
+        if( tag == "RedPiece" && square.GetComponent<SquareScript>().rank == 5||
+            tag == "BluePiece" && square.GetComponent<SquareScript>().rank == 0)
         {
-            // if we are moving laterally, backwards, or too far away reject that move.
-            if (tag == "RedPiece" && (distance >= 0 || distance < -2) || 
-                tag == "BluePiece" && (distance < 1 || distance > 2))
-            {
-                Debug.Log("Invalid Move!");
-                return false;
-            }
+            isKing = true;
+            startcolor = tag == "RedPiece" ? Color.magenta : Color.cyan;
         }
-
-        // If Square is open 
-        if(sq.GetComponent<SquareScript>().occupiedBy() == "")
-        {
-            // If the distance is more then 1, check to make sure there is an enemy between us.
-
-            // Removing ourselves from the current Square
-            square.GetComponent<SquareScript>().setPiece(null);
-
-            //Adding the square as our new piece
-            square = sq;
-            //adding ourselves to the square
-            square.GetComponent<SquareScript>().setPiece(gameObject);
-            
-        }
-
-        return true;
     }
 
     public void toggleSelected()
@@ -59,6 +51,16 @@ public class PiecesScript : MonoBehaviour {
     public bool isSelected()
     {
         return selected;
+    }
+
+    public GameObject getSquare()
+    {
+        return square;
+    }
+
+    public bool canJump()
+    {
+        return square.GetComponent<SquareScript>().jumpableNeighbour();
     }
 
     // Update is called once per frame
